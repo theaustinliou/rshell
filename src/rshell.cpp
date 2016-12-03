@@ -50,11 +50,13 @@ int main() {
   if((!beg->compare("exit")) && vec.empty()) {
     return 1;
   }
+  //cd case
   if((!beg->compare("cd")) && vec.empty()) {
    char writable3 [100];
     int size = 0;
     int i = 0;
     ++beg;
+    //store the arg in writable3
     while((beg != tkn.end()) && (*beg != ";") && (*beg != "|") && (*beg != "&") && (*beg != ")")) {
      i++;
 
@@ -66,22 +68,27 @@ int main() {
      ++beg;
    }
    writable3[size] = '\0';
+   //if - case
     if(!strcmp(writable3, "-")) {
       nextdir = getenv("OLDPWD");
     }
+    //home case
     else if(!strcmp(writable3,"")) {
       nextdir = getenv("HOME");
      break;
     }
+    //path case
     else {
      nextdir = writable3;
     }
     getcwd(buf, sizeof(buf));
     currdir = buf;
+    //chdir
     if(chdir(nextdir) == -1) {
      cout << "ERROR: couldn't change directory" << endl;
      break;
     }
+    //set environment variables
     setenv("PWD", nextdir, 1);
     setenv("OLDPWD", currdir, 1);
     break;
