@@ -9,6 +9,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <stdlib.h>
 
 using namespace std;
 using namespace boost;
@@ -25,6 +26,9 @@ int main() {
  int status;
  int testFlag;
  char ** ptr;
+ char* currdir;
+ char* nextdir;
+ char buf[1024];
  while(1) {
  //these flags are used to determine if the next command should run, and if we see && or || respectively
  failed = false;
@@ -33,8 +37,9 @@ int main() {
  //We introduce these two to keep track of the boolean value in parentheses
  hasTrue = false;
  andFailed = false;
-
- cout << "$ ";
+ getcwd(buf, sizeof(buf));
+ cout << buf << " $ ";
+ //cout << getenv("PWD") << " $ ";
  getline(cin, temp);
  tokenizer<char_delimiters_separator<char> >tkn(temp, sep);
  //for each token
@@ -45,6 +50,42 @@ int main() {
   if((!beg->compare("exit")) && vec.empty()) {
     return 1;
   }
+  if((!beg->compare("cd")) && vec.empty()) {
+   char writable3 [100];
+    int size = 0;
+    int i = 0;
+    ++beg;
+    while((beg != tkn.end()) && (*beg != ";") && (*beg != "|") && (*beg != "&") && (*beg != ")")) {
+     i++;
+
+     str = *beg;
+     for(unsigned int i = 0; i < str.size(); i++){
+      writable3[i+size] = str[i];
+     }
+     size += str.size();
+     ++beg;
+   }
+   writable3[size] = '\0';
+    if(!strcmp(writable3, "-")) {
+      nextdir = getenv("OLDPWD");
+    }
+    else if(!strcmp(writable3,"")) {
+      nextdir = getenv("HOME");
+     break;
+    }
+    else {
+     nextdir = writable3;
+    }
+    getcwd(buf, sizeof(buf));
+    currdir = buf;
+    if(chdir(nextdir) == -1) {
+     cout << "ERROR: couldn't change directory" << endl;
+     break;
+    }
+    setenv("PWD", nextdir, 1);
+    setenv("OLDPWD", currdir, 1);
+    break;
+   }
   //if we encounter (, then begin counting precedence
   if((!beg->compare("(")) && vec.empty()) {
    if(failed == true) {
